@@ -1,3 +1,9 @@
 
 *.iml
 *.idea/*.xml
+
+DataCleaning/.idea/workspace.xml
+
+DataCleaning/.idea/misc.xml
+
+DataCleaning/.idea/modules.xml
