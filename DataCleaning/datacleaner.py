@@ -1,24 +1,25 @@
 import xml.etree.ElementTree
 import codecs
 
-root = xml.etree.ElementTree.parse('webcrawl-deen-sample.tmx').getroot()
+root = xml.etree.ElementTree.parse('../data/wikititles-2014_enfa.xml').getroot()
 
-tuTags = root.findall("body/tu")
+translations = root.findall("translation")
 
-f = codecs.open("parallel_10000_sample.txt", "w", "utf-8")
-for tu in tuTags:
-    print(tu.attrib["tuid"])
-    tuvs = tu.findall("tuv")
+f = codecs.open("parallel_corpus_en_fa.txt", "w", "utf-8")
+for translation in translations:
+    translation_id = translation.attrib["id"]
+    print(translation_id)
+    entries = translation.findall("entry")
     en_sentence = ""
-    de_sentence = ""
+    fa_sentence = ""
 
-    for tuv in tuvs:
-        lang = tuv.attrib["lang"]
+    for entry in entries:
+        lang = entry.attrib["lang"]
         if lang == "en":
-            en_sentence = tuv[2].text
+            en_sentence = entry.text
         else:
-            de_sentence = tuv[2].text
+            fa_sentence = entry.text
 
-    f.write(en_sentence+"\t"+de_sentence+"\n")
+    f.write(translation_id+"\t"+en_sentence+"\t"+fa_sentence+"\n")
 
 f.close()
