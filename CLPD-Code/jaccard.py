@@ -1,4 +1,7 @@
 import codecs
+import collections
+import Queue as Q
+from collections import defaultdict
 import cPickle as pickle
 
 def jaccard(set1, set2):
@@ -51,29 +54,35 @@ def get_max_prob_word(words):
 if __name__ == "__main__":
 	SENTENCES = []
 
-	# Reading Europarl forat
-	# english_lines = readlines("../data/news-commentary-v7.cs-en.en", False)
-	# foreign_lines = readlines("../data/news-commentary-v7.cs-en.cs", True)
+	#Reading Europarl forat
+	english_lines = readlines("../data/news-commentary-v7.cs-en.en", False)
+	foreign_lines = readlines("../data/news-commentary-v7.cs-en.cs", True)
 
 	# Dictionaries - custom made from ibm1 and standard off the shelf
 	# bilingual_dictionary = read_dictionary("../data/Hindi-English Parallel/hindi-english-bilingual-copy.txt")	
-	bilingual_dictionary = read_pickle_dict("../data/en_hi.dict.pickle")
+	# bilingual_dictionary = read_pickle_dict("../data/en_hi.dict.pickle")
+
+
+	# bilingual_dictionary = read_dictionary("../data/news-commentary-cs-en.txt")
+	bilingual_dictionary = read_pickle_dict("../data/en_cs.dict.pickle")
 	
 
 	#Reading custom foramt
-	file = codecs.open("../data/Hindi-English Parallel/hindi-parallel-tides-test.txt","r","utf-8")
-	english_lines = []
-	foreign_lines = []
-	for line in file:
-		tokens = line.split("\t")
-		english_lines.append(tokens[1].strip())
-		foreign_lines.append(tokens[2].strip())
+	# file = codecs.open("../data/Hindi-English Parallel/hindi-parallel-tides-test.txt","r","utf-8")
+	# english_lines = []
+	# foreign_lines = []
+	# for line in file:
+	# 	tokens = line.split("\t")
+	# 	english_lines.append(tokens[1].strip())
+	# 	foreign_lines.append(tokens[2].strip())
 
 
 	# Common code for 2 fomats
-	output_file = codecs.open("../data/Hindi-English Parallel/hindi-parallel-tides-simple.txt","w","utf-8")
+	# output_file = codecs.open("../data/Hindi-English Parallel/hindi-parallel-tides-simple2-top10.txt","w","utf-8")
+	output_file = codecs.open("../data/news-commentry-cs-en-simple-top10.txt","w","utf-8")
 
-	output = {}
+	k=10
+	output = defaultdict()
 	actual = {}
 	correct = 0
 	total = 0
@@ -81,7 +90,7 @@ if __name__ == "__main__":
 		english_sentence = english_lines[i]
 		english_words = english_sentence.split(" ")
 		
-		output[i] = (None, 0.0)
+		output[i] = Q.PriorityQueue()
 		actual[i] = (None, 0.0) 
 		if i == 500:
 			break
@@ -99,20 +108,21 @@ if __name__ == "__main__":
 			foreign_sentence = foreign_lines[j]
 
 			# Based on the file format of dictionary.
-			foreign_words = [word.encode("UTF-8") for word in foreign_sentence.split(" ")]
-			# foreign_words = foreign_sentence.split(" ")
+			# foreign_words = [word.encode("UTF-8") for word in foreign_sentence.split(" ")]
+			foreign_words = foreign_sentence.split(" ")
 			
 			score = jaccard(set(translated_words), set(foreign_words))
-			current, max_val = output[i];
+			
 			if i == j:
 				actual[i] = (i,score)
-			if max_val < score:
-				output[i] = (j, score)
+			output[i].put( (-score, score, j))
 		total+=1
-		if output[i][0] == actual[i][0]:
-			correct+=1
 		score_percent=0
-		# score_percent = (actual[i][1]-output[i][1])/(actual[i][1])
-		output_file.write(str(i)+"\t"+str(output[i])+"\t"+str(actual[i])+"\t"+str(score_percent) + "\n")
+		for c in range(0,k):
+			(priority, val, foreign_id) = output[i].get()
+			output_file.write(str(i)+"\t"+str(foreign_id)+","+str(val)+"\t"+str(actual[i])+"\n")
+			if foreign_id == i:
+				correct+=1
+
 	output_file.close()
 	print float(correct)/float(total)

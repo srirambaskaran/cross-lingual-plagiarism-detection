@@ -3,11 +3,14 @@ import decimal
 import nltk
 import math
 import codecs
+import Queue as Q
 from operator import itemgetter
+from collections import defaultdict
 from nltk import word_tokenize
 from pSCRDRtagger.RDRPOSTagger import RDRPOSTagger
 from Utility.Utils import readDictionary
 from decimal import Decimal as D
+
 
 
 foreign_language = "Hindi"
@@ -58,23 +61,23 @@ def read_dictionary(file):
 
 if __name__ == "__main__":
 	SENTENCES = []
-	# english_lines = readlines("../data/news-commentary-v7.cs-en.en", False)
-	# foreign_lines = readlines("../data/news-commentary-v7.cs-en.cs", True)
-	bilingual_dictionary = read_dictionary("../data/Hindi-English Parallel/hindi-english-bilingual-copy.txt")
-	output_file = codecs.open("../data/Hindi-English Parallel/hindi-parallel-tides-matched.txt","w","utf-8")
+	english_lines = readlines("../data/news-commentary-v7.cs-en.en", False)
+	foreign_lines = readlines("../data/news-commentary-v7.cs-en.cs", True)
+	bilingual_dictionary = read_dictionary("../data/news-commentary-cs-en.txt")
+	output_file = codecs.open("../data/news-commentry-cs-en-matched-top10.txt","w","utf-8")
 
+	# file = codecs.open("../data/Hindi-English Parallel/hindi-parallel-tides-test.txt","r","utf-8")
+	# bilingual_dictionary = read_dictionary("../data/Hindi-English Parallel/hindi-english-bilingual-copy.txt")
+	# output_file = codecs.open("../data/Hindi-English Parallel/hindi-parallel-tides-matched.txt","w","utf-8")
 
-	file = codecs.open("../data/Hindi-English Parallel/hindi-parallel-tides-test.txt","r","utf-8")
-    # output_file = codecs.open("../data/Hindi-English Parallel/hindi-english-bilingual.txt","w","utf-8")
+	# english_lines = []
+	# foreign_lines = []
+	# for line in file:
+	# 	tokens = line.split("\t")
+	# 	english_lines.append(tokens[1].strip())
+	# 	foreign_lines.append(tokens[2].strip())
 
-	english_lines = []
-	foreign_lines = []
-	for line in file:
-		tokens = line.split("\t")
-		english_lines.append(tokens[1].strip())
-		foreign_lines.append(tokens[2].strip())
-
-	output = {}
+	output = defaultdict()
 	actual = {}
 	correct = 0
 	total = 0
@@ -84,7 +87,7 @@ if __name__ == "__main__":
 		len_english = float(len(english_words))
 		if len_english == 0:
 			continue
-		output[i] = (None, float("-inf"))
+		output[i] = Q.PriorityQueue()
 		actual[i] = (None, float("-inf")) 
 		if i == 500:
 			break
@@ -105,17 +108,18 @@ if __name__ == "__main__":
 							transition_model += bilingual_dictionary[e][f]
 						else:
 							transition_model -= 0.001
-			current, max_val = output[i];
+			
 			val = transition_model * length_model
 			if i == j:
 				actual[i] = (i,val)
-			if max_val < val:
-				output[i] = (j, val)
-		if output[i][0] == actual[i][0]:
-			correct+=1
+			output[i].put((-val, val , j))
 		total+=1
-		score_percent = (actual[i][1]-output[i][1])/(actual[i][1])
-		output_file.write(str(i)+"\t"+str(output[i])+"\t"+str(actual[i])+"\t"+str(score_percent) + "\n")
+		
+		for c in range(0,k):
+			(priority, val, foreign_id) = output[i].get()
+			output_file.write(str(i)+"\t"+str(foreign_id)+","+str(val)+"\t"+str(actual[i])+"\n")
+			if foreign_id == i:
+				correct+=1
 
 	print float(correct)/float(total)
 	output_file.close()
