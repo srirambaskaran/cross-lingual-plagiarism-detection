@@ -1,3 +1,0 @@
-import codecs
-
-e_file = codecs.open()

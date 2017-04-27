@@ -1,0 +1,51 @@
+Bible
+Word2vec scores
+Top-1=> Correct: 112 Accuracy:0.32
+Top-3=> Correct: 169 Accuracy:0.482857142857
+Top-5=> Correct: 200 Accuracy:0.571428571429
+Top-10=> Correct: 251 Accuracy:0.717142857143
+
+CLPD-ASA
+Top-1=> Correct: 148 Accuracy:0.422857142857
+Top-3=> Correct: 212 Accuracy:0.605714285714
+Top-5=> Correct: 242 Accuracy:0.691428571429
+Top-10=> Correct: 270 Accuracy:0.771428571429
+
+Jaccard - IBM Model
+Top-1=> Correct: 69 Accuracy:0.197142857143
+Top-3=> Correct: 99 Accuracy:0.282857142857
+Top-5=> Correct: 108 Accuracy:0.308571428571
+Top-10=> Correct: 120 Accuracy:0.342857142857
+
+Jaccard - Standard
+Top-1=> Correct: 42 Accuracy:0.12
+Top-3=> Correct: 67 Accuracy:0.191428571429
+Top-5=> Correct: 88 Accuracy:0.251428571429
+Top-10=> Correct: 104 Accuracy:0.297142857143
+
+
+
+Newspaper
+Word2vec scores
+Top-1=> Correct: 114 Accuracy:0.228
+Top-3=> Correct: 194 Accuracy:0.388
+Top-5=> Correct: 234 Accuracy:0.468
+Top-10=> Correct: 285 Accuracy:0.57
+
+CLPD-ASA
+Top-1=> Correct: 272 Accuracy:0.544
+Top-3=> Correct: 351 Accuracy:0.702
+Top-5=> Correct: 367 Accuracy:0.734
+Top-10=> Correct: 399 Accuracy:0.798
+
+Jaccard - Standard
+Top-1=> Correct: 122 Accuracy:0.244
+Top-3=> Correct: 161 Accuracy:0.322
+Top-5=> Correct: 188 Accuracy:0.376
+Top-10=> Correct: 215 Accuracy:0.43
+
+Jaccard - Alignment
+Top-1=> Correct: 170 Accuracy:0.34
+Top-3=> Correct: 230 Accuracy:0.46
+Top-5=> Correct: 252 Accuracy:0.504
+Top-10=> Correct: 269 Accuracy:0.538

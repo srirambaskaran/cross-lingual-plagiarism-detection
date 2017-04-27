@@ -13,7 +13,6 @@ from pSCRDRtagger.RDRPOSTagger import RDRPOSTagger
 from Utility.Utils import readDictionary
 from decimal import Decimal as D
 
-
 def read_config(file, section):
 	Config = ConfigParser.ConfigParser()
 	Config.read(file)
@@ -59,8 +58,6 @@ def read_dictionary(file):
 
 	return e_to_f
 
-
-
 configs = read_config(sys.argv[1], sys.argv[2])
 foreign_language = configs["foreign_language"]
 model_rdr = "./Models/UniPOS/UD_"+foreign_language+"/train.UniPOS.RDR"
@@ -71,12 +68,6 @@ foreign_language_dictionary = readDictionary(model_dict)
 k = int(configs["k"])
 mu = float(configs["mu"])
 sigma = float(configs["sigma"])
-
-SENTENCES = []
-# english_lines = readlines("../data/news-commentary-v7.cs-en.en", False)
-# foreign_lines = readlines("../data/news-commentary-v7.cs-en.cs", True)
-# bilingual_dictionary = read_dictionary("../data/news-commentary-cs-en.txt")
-# output_file = codecs.open("../data/news-commentry-cs-en-matched-top10.txt","w","utf-8")
 
 file = codecs.open(configs["input_file"],"r","utf-8")
 bilingual_dictionary = read_dictionary(configs["bilingual_dictionary"])
@@ -100,17 +91,11 @@ for i in range(0,len(english_lines)):
 		continue
 	output[i] = Q.PriorityQueue()
 	actual[i] = (None, float("-inf")) 
-	if i == 500:
-		break
 	for j in range(0, len(foreign_lines)):
-		if j == 500:
-			break
 		foreign_sentence = foreign_lines[j]
 		foreign_words = foreign_sentence.split(" ")
 		len_foreign = float(len(foreign_words))
-
 		length_model = math.exp(-0.5 * (((len_foreign / len_english) - mu) / sigma)**2)
-		
 		transition_model = 0.0;
 		for e,e_tag in english_words:
 			if e in bilingual_dictionary:
@@ -119,17 +104,16 @@ for i in range(0,len(english_lines)):
 						transition_model += bilingual_dictionary[e][f]
 					else:
 						transition_model -= 0.001
-		
 		val = transition_model * length_model
 		if i == j:
 			actual[i] = (i,val)
 		output[i].put((-val, val , j))
-	total+=1
+	total += 1
 	
 	for c in range(0,k):
 		(priority, val, foreign_id) = output[i].get()
 		output_file.write(str(i)+"\t"+str(foreign_id)+","+str(val)+"\t"+str(actual[i])+"\n")
 		if foreign_id == i:
-			correct+=1
+			correct += 1
 
 output_file.close()

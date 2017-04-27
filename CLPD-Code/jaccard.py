@@ -62,22 +62,12 @@ def get_max_prob_word(words):
 			selected_word = word
 	return selected_word
 
-
-
-
 configs = read_config(sys.argv[1],sys.argv[2])
-mode=int(configs["mode"])
-#Reading Europarl format
-# english_lines = readlines("../data/news-commentary-v7.cs-en.en", False)
-# foreign_lines = readlines("../data/news-commentary-v7.cs-en.cs", True)
+mode= configs["mode"]
 
-# Dictionaries - custom made from ibm1 and standard off the shelf
-# bilingual_dictionary = read_dictionary("../data/news-commentary-cs-en.txt")
-# bilingual_dictionary = read_pickle_dict("../data/en_cs.dict.pickle")
-
-if mode == 1:
+if mode == 'standard':
 	bilingual_dictionary = read_pickle_dict(configs["standard_dictioanry"])
-elif mode == 2:
+elif mode == 'alignment':
 	bilingual_dictionary = read_dictionary(configs["bilingual_dictionary"])	
 
 #Reading custom foramt
@@ -101,29 +91,23 @@ total = 0
 for i in range(0,len(english_lines)):
 	english_sentence = english_lines[i]
 	english_words = english_sentence.split(" ")
-	
 	output[i] = Q.PriorityQueue()
 	actual[i] = (None, 0.0) 
-	if i == 500:
-		break
 	translated_words = []
 	for e in english_words:
 		if e in bilingual_dictionary:
 			# Two ways to get translated word.
-			if mode == 1:
+			if mode == 'standard':
 				translated_words.append(bilingual_dictionary[e][0])
-			elif mode == 2:
+			elif mode == 'alignment':
 				translated_words.append(get_max_prob_word(bilingual_dictionary[e]))
 
 	for j in range(0, len(foreign_lines)):
-		if j == 500:
-			break
 		foreign_sentence = foreign_lines[j]
-
 		# Based on the file format of dictionary.
-		if mode == 2:
+		if mode == 'alignment':
 			foreign_words = foreign_sentence.split(" ")
-		elif mode == 1:
+		elif mode == 'standard':
 			foreign_words = [word.encode("UTF-8") for word in foreign_sentence.split(" ")]
 
 		score = jaccard(set(translated_words), set(foreign_words))
