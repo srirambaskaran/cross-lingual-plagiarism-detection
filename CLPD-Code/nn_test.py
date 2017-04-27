@@ -3,6 +3,7 @@ import os
 import re
 import sys
 import ConfigParser
+import word2vec
 import math
 import numpy as np
 import Queue as Q
@@ -10,6 +11,7 @@ import cPickle as pickle
 from scipy import spatial
 from collections import defaultdict
 from sklearn.model_selection import train_test_split, cross_val_score, ShuffleSplit
+from sklearn.metrics import mean_squared_error
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.models import model_from_json
@@ -36,25 +38,26 @@ for line in file:
 	english_lines.append(tokens[1].strip())
 	foreign_lines.append(tokens[2].strip())
 
-english_embedding = pickle.load(open(configs['english_embeddings'],"rb"))
-foreign_embedding = pickle.load(open(configs['foreign_embeddings'],"rb"))
+english_embedding = word2vec.load(configs['english_embeddings'])
+foreign_embedding = word2vec.load(configs['foreign_embeddings'])
 k = int(configs["k"])
 output_file = open(configs["output_file"],"w")
 
 english = []
 foreign = []
+dim = 50
 for i in range(0, len(foreign_lines)):
 	foreign_words = foreign_lines[i].split()
 	english_words = english_lines[i].split()
 
-	english_average = np.full((64), 0.0)
+	english_average = np.full((dim), 0.0)
 	english_total = 0
 	for word in english_words:
 		if word in english_embedding:
 			english_average += english_embedding[word]
 			english_total+=1
 
-	foreign_average = np.full((64), 0.0)
+	foreign_average = np.full((dim), 0.0)
 	foreign_total = 0
 	for word in foreign_words:
 		if word in foreign_embedding:
@@ -63,34 +66,39 @@ for i in range(0, len(foreign_lines)):
 	english.append(english_average)
 	foreign.append(foreign_average)
 
+
+print ("Read Input Data : "+configs["input_file"])
 english = np.asarray(english)
 foreign = np.asarray(foreign)
 
-json_file = open('nn_sequence_embedding.json', 'r')
+json_file = open(configs['nn_model'], 'r')
 loaded_model_json = json_file.read()
 json_file.close()
 loaded_model = model_from_json(loaded_model_json)
 # load weights into new model
-loaded_model.load_weights("nn_sequence_weights.txt")
-
+loaded_model.load_weights(configs['nn_weights'])
+print ("Loaded NN Model : "+configs["nn_model"])
+print ("Loaded NN Weights : "+configs["nn_weights"])
 loaded_model.compile(loss='mean_squared_error', optimizer='adam', metrics=['accuracy'])
 # scores = loaded_model.evaluate(english, foreign)
 # print("\n%s: %.2f%%" % (loaded_model.metrics_names[1], scores[1]*100))
-
+print ("NN Model Compiled")
 output = defaultdict()
 actual = {}
 correct = 0
 total = 0
+print ("Predicting new data")
 for i in range(len(english)):
 	prediction = loaded_model.predict(english[i].reshape(1,-1))
 	output[i] = Q.PriorityQueue()
 	actual[i] = (None, 0.0) 
 	for j in range(len(foreign)):
-		fo_line =   [j]
-		score = 1-spatial.distance.cosine(prediction[0], fo_line)
+		fo_line =   foreign[j]
+		# score = 1-spatial.distance.cosine(prediction[0], fo_line)
+		score = mean_squared_error(fo_line, prediction[0])
 		if i == j:
 			actual[i] = (i,score)
-		output[i].put( (-score, score, j))
+		output[i].put( (score, score, j))
 	total+=1
 	score_percent=0
 	for c in range(0,k):
@@ -98,5 +106,6 @@ for i in range(len(english)):
 		output_file.write(str(i)+"\t"+str(foreign_id)+","+str(val)+"\t"+str(actual[i])+"\n")
 		if foreign_id == i:
 			correct+=1
-print float(correct)/ float(total)
+
+print "Accuracy based on mean-square-error: "+str(float(correct)/ float(total))+"\t (Top - "+str(k)+")"
 output_file.close()

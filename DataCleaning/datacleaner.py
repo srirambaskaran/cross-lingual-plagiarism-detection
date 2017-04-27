@@ -1,25 +1,22 @@
 import xml.etree.ElementTree
 import codecs
 
-root = xml.etree.ElementTree.parse('../data/wikititles-2014_enfa.xml').getroot()
+root = xml.etree.ElementTree.parse('../../../data/Bible/English.xml').getroot()
 
-translations = root.findall("translation")
+chapters = root.findall("text/body/div/div")
 
-f = codecs.open("parallel_corpus_en_fa.txt", "w", "utf-8")
-for translation in translations:
-    translation_id = translation.attrib["id"]
-    print(translation_id)
-    entries = translation.findall("entry")
-    en_sentence = ""
-    fa_sentence = ""
+f = codecs.open("english_bible.txt", "w", "utf-8")
+i = 1
+for chapter in chapters:
+    
+    segments = chapter.findall("seg")
 
-    for entry in entries:
-        lang = entry.attrib["lang"]
-        if lang == "en":
-            en_sentence = entry.text
-        else:
-            fa_sentence = entry.text
+    for segment in segments:
+        print i
+        sentence = segment.text
+        segment_id = segment.attrib["id"]
+        if sentence is not None:
+            f.write(segment_id.strip()+"\t"+sentence.strip()+"\n")
 
-    f.write(translation_id+"\t"+en_sentence+"\t"+fa_sentence+"\n")
-
+        i+=1
 f.close()

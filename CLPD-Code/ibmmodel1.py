@@ -103,8 +103,8 @@ if __name__ == '__main__':
     #     SENTENCES.append( (english_words, foreign_words) )
 
     # Reading custom created format
-    file = codecs.open("../data/Hindi-English Parallel/hindi-parallel-tides-train.txt","r","utf-8")
-    output_file = codecs.open("../data/Hindi-English Parallel/hindi-english-bilingual.txt","w","utf-8")
+    file = codecs.open("../DataCleaning/en_hi_bible_train.txt","r","utf-8")
+    output_file = codecs.open("../DataCleaning/en_hi_bible_ibm1.txt","w","utf-8")
     i = 0
     for line in file:
         i += 1

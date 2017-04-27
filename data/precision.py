@@ -10,8 +10,8 @@ def read_config(file, section):
 		configs[option] = Config.get(section, option)
 	return configs
 
-configs = read_config(sys.argv[1], sys.argv[2])
-file = open(configs["output_file"])
+# configs = read_config(sys.argv[1], sys.argv[2])
+file = open(sys.argv[1])
 
 correct_1 = 0
 correct_3 = 0
