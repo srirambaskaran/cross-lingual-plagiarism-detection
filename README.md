@@ -1,33 +1,35 @@
-# NLP-Project-Code
-# Jaccard
+# Cross Lingual Plagiarism Detection
+## NLP Project
+
+### Jaccard
 .Standard
 change '''mode''' to standard. Rename relevant output files.
 .Alignment
 change '''mode''' to standard. Rename relevant output files.
 
-## Bible corpus
+#### Bible corpus
 ```python jaccard.py jaccard.config Bible```
 
-## Newspaper Corpus
+#### Newspaper Corpus
 ```python jaccard.py jaccard.config Newspaper```
 
 
-# CLPD-ASA
+### CLPD-ASA
 
-## Bible corpus
+#### Bible corpus
 ```python clpd_asa.py clpd_asa.config Bible```
 
-##Newspaper Corpus
+#### Newspaper Corpus
 ```python clpd_asa.py clpd_asa.config Newspaper```
 
 
 
-# VectorSim
+### VectorSim
 
 ## Bible corpus
 ```python word2vec_train.py.py word2vec_train.py.config Bible```
 
-##Newspaper Corpus
+#### Newspaper Corpus
 ```python word2vec_train.py.py word2vec_train.py.config Newspaper```
 
 
