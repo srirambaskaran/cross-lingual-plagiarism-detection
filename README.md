@@ -26,7 +26,7 @@ change '''mode''' to standard. Rename relevant output files.
 
 ### VectorSim
 
-## Bible corpus
+#### Bible corpus
 ```python word2vec_train.py.py word2vec_train.py.config Bible```
 
 #### Newspaper Corpus
