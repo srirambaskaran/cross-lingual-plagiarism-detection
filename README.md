@@ -1,21 +1,34 @@
 # NLP-Project-Code
-#Jaccard
+# Jaccard
 .Standard
 change '''mode''' to standard. Rename relevant output files.
 .Alignment
 change '''mode''' to standard. Rename relevant output files.
 
-##Bible corpus
-'''python jaccard.py jaccard.config Bible'''
+## Bible corpus
+```python jaccard.py jaccard.config Bible```
+
+## Newspaper Corpus
+```python jaccard.py jaccard.config Newspaper```
+
+
+# CLPD-ASA
+
+## Bible corpus
+```python clpd_asa.py clpd_asa.config Bible```
 
 ##Newspaper Corpus
-'''python jaccard.py jaccard.config Newspaper'''
+```python clpd_asa.py clpd_asa.config Newspaper```
 
 
-#CLPD-ASA
 
-##Bible corpus
-'''python clpd_asa.py clpd_asa.config Bible'''
+# VectorSim
+
+## Bible corpus
+```python word2vec_train.py.py word2vec_train.py.config Bible```
 
 ##Newspaper Corpus
-'''python clpd_asa.py clpd_asa.config Newspaper'''
+```python word2vec_train.py.py word2vec_train.py.config Newspaper```
+
+
+use  ```word2vec_multiple_iter.py``` for iteratively running for various vector dimension values.
