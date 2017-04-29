@@ -71,7 +71,7 @@ sigma = float(configs["sigma"])
 
 file = codecs.open(configs["input_file"],"r","utf-8")
 bilingual_dictionary = read_dictionary(configs["bilingual_dictionary"])
-output_file = codecs.open(configs["output_file"],"w","utf-8")
+output_file = codecs.open(configs["output_ranking"],"w","utf-8")
 
 english_lines = []
 foreign_lines = []

@@ -80,7 +80,7 @@ for line in file:
 	foreign_lines.append(tokens[2].strip())
 
 
-output_file = codecs.open(configs["output_file"],"w","utf-8")
+output_file = codecs.open(configs["output_ranking"],"w","utf-8")
 
 k=int(configs["k"])
 

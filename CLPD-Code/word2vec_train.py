@@ -9,6 +9,7 @@ from scipy import spatial
 from sklearn import linear_model
 from collections import defaultdict
 from sklearn.metrics import r2_score, mean_squared_error
+from time import gmtime, strftime
 
 #Reading configuration
 def read_config(file, section):
@@ -21,7 +22,7 @@ def read_config(file, section):
     return configs
 
 #Reading paralle corpus
-def read_parallel_corpus(file_lines, dimension_input):
+def read_parallel_corpus(file_lines, english_embedding, foreign_embedding, dimension_input, filtered):
     english_lines = []
     foreign_lines = []
     for line in file_lines:
@@ -46,95 +47,110 @@ def read_parallel_corpus(file_lines, dimension_input):
             if word in foreign_embedding:
                 foreign_final += foreign_embedding[word]
                 foreign_total+=1
-        english.append(english_final)
-        foreign.append(foreign_final)
+
+        if filtered:
+            if float(english_total)/len(english_words) >= 0.8 and float(foreign_total)/len(foreign_words) >= 0.8:
+                english.append(english_final)
+                foreign.append(foreign_final)
+        else:
+            english.append(english_final)
+            foreign.append(foreign_final)
     return np.asarray(english), np.asarray(foreign)
 
 
-configs = read_config(sys.argv[1],sys.argv[2])
-train_file_obj = codecs.open(configs['train_file'],'r','utf-8')
-train_lines = train_file_obj.readlines()
-train_file_obj.close()
-train_word_vectors = configs['train_word_vectors'].lower()
-dimension_input = int(configs['dimension_input'])
+def main(argv1, argv2):
+    configs = read_config(argv1,argv2)
+    train_file_obj = codecs.open(configs['train_file'],'r','utf-8')
+    train_lines = train_file_obj.readlines()
+    train_file_obj.close()
+    train_word_vectors = configs['train_word_vectors'].lower()
+    dimension_input = int(configs['dimension_input'])
 
-# Training word2vec for the training data
-if train_word_vectors == 'true':
-    english_sents =[]
-    foreign_sents =[]
-    for line in train_lines:
-        token=line.strip().split('\t')
-        english_sents.append(token[1])
-        foreign_sents.append((token[2]))
+    # Training word2vec for the training data
+    if train_word_vectors == 'true':
+        english_sents =[]
+        foreign_sents =[]
+        for line in train_lines:
+            token=line.strip().split('\t')
+            english_sents.append(token[1])
+            foreign_sents.append((token[2]))
 
-    eng_out_sents = codecs.open(configs['english_temp'],'w',encoding="utf-8")
-    for l1 in english_sents:
-        eng_out_sents.write(l1+'\n')
-    eng_out_sents.close()
-    foreign_out_sents = codecs.open(configs['foreign_temp'],'w',encoding="utf-8")
-    for l2 in foreign_sents:
-        foreign_out_sents.write(l2+'\n')
-    foreign_out_sents.close()
+        eng_out_sents = codecs.open(configs['english_temp'],'w',encoding="utf-8")
+        for l1 in english_sents:
+            eng_out_sents.write(l1+'\n')
+        eng_out_sents.close()
+        foreign_out_sents = codecs.open(configs['foreign_temp'],'w',encoding="utf-8")
+        for l2 in foreign_sents:
+            foreign_out_sents.write(l2+'\n')
+        foreign_out_sents.close()
 
-    word2vec.word2vec(configs['english_temp'], configs['english_embeddings'], size=dimension_input, verbose=True)
-    word2vec.word2vec(configs['foreign_temp'], configs['foreign_embeddings'], size=dimension_input , verbose=True)
+        word2vec.word2vec(configs['english_temp'], configs['english_embeddings'], size=dimension_input, verbose=True)
+        word2vec.word2vec(configs['foreign_temp'], configs['foreign_embeddings'], size=dimension_input , verbose=True)
 
 
-english_embedding = word2vec.load(configs['english_embeddings'])
-foreign_embedding = word2vec.load(configs['foreign_embeddings'])
+    english_embedding = word2vec.load(configs['english_embeddings'])
+    foreign_embedding = word2vec.load(configs['foreign_embeddings'])
 
-test_lines = codecs.open(configs['test_file'],'r','utf-8').readlines()
+    test_lines = codecs.open(configs['test_file'],'r','utf-8').readlines()
 
-k=int(configs['k'])
-mu = float(configs['mu'])
-sigma = float(configs['sigma'])
+    k=int(configs['k'])
+    mu = float(configs['mu'])
+    sigma = float(configs['sigma'])
 
-english_train, foreign_train = read_parallel_corpus(train_lines, dimension_input)
-english_test, foreign_test = read_parallel_corpus(test_lines, dimension_input)
+    english_train, foreign_train = read_parallel_corpus(train_lines,english_embedding,foreign_embedding, dimension_input, True)
+    english_test, foreign_test = read_parallel_corpus(test_lines,english_embedding,foreign_embedding, dimension_input, False)
 
-print ("Fitting a linear regression model")
-regression = linear_model.LinearRegression()
-regression.fit(english_train, foreign_train)
-print ("Completed Linear Regression!")
+    print ("Fitting a linear regression model")
+    regression = linear_model.LinearRegression()
+    regression.fit(english_train, foreign_train)
+    print ("Completed Linear Regression!")
 
-print ("Testing Linear Regression Model!")
-foreign_test_pred = regression.predict(english_test)
-print("R2 Score: %.2f" % r2_score(foreign_test,foreign_test_pred))
+    print ("Testing Linear Regression Model!")
+    foreign_test_pred = regression.predict(english_test)
+    print("R2 Score: %.2f" % r2_score(foreign_test,foreign_test_pred))
 
-length_based_metric = configs['length_based_metric'].lower()
-metric = configs['metric'].lower()
-output = defaultdict()
-actual = {}
-correct = 0
-total = 0
-output_file = codecs.open(configs['output_ranking'],'w','utf-8')
-for i in range(len(english_test)):
-    prediction = foreign_test_pred[i]
-    output[i] = Q.PriorityQueue()
-    actual[i] = (None, 0.0)
-    len_english = len(english_test)
-    for j in range(len(foreign_test)):
-        fo_line =  foreign_test[j]
-        len_foreign = len(fo_line)
-        score = 0
-        if metric == 'cosine':
-            score = spatial.distance.cosine(fo_line, prediction)
-        elif metric == 'mean_squared_error':
-            score = mean_squared_error(fo_line, prediction)
-        if length_based_metric == 'true':
-            length_model = math.exp(-0.5 * (((float(len_foreign) / len_english) - mu) / sigma)**2)
-            score = length_model*score
+    length_based_metric = configs['length_based_metric'].lower()
+    metric = configs['metric'].lower()
+    output = defaultdict()
+    actual = {}
+    correct = 0
+    total = 0
+    output_file_name=configs['output_ranking']
+    extension = output_file_name[output_file_name.index('.'):]
+    time_str = strftime("%d%m%Y%H%M%S", gmtime())
+    custom_file_name = output_file_name[0:output_file_name.index('.')]+"_"+str(dimension_input)+"_"+time_str+extension
+    output_file = codecs.open(custom_file_name,'w','utf-8')
+    for i in range(len(english_test)):
+        prediction = foreign_test_pred[i]
+        output[i] = Q.PriorityQueue()
+        actual[i] = (None, 0.0)
+        len_english = len(english_test)
+        for j in range(len(foreign_test)):
+            fo_line =  foreign_test[j]
+            len_foreign = len(fo_line)
+            score = 0
+            if metric == 'cosine':
+                score = spatial.distance.cosine(fo_line, prediction)
+            elif metric == 'mean_squared_error':
+                score = mean_squared_error(fo_line, prediction)
+            if length_based_metric == 'true':
+                length_model = math.exp(-0.5 * (((float(len_foreign) / len_english) - mu) / sigma)**2)
+                score = length_model*score
 
-        if i == j:
-            actual[i] = (i,score)
-        output[i].put( (score, score, j))
-    total+=1
-    score_percent=0
-    for c in range(0,k):
-        (priority, val, foreign_id) = output[i].get()
-        output_file.write(str(i)+"\t"+str(foreign_id)+","+str(val)+"\t"+str(actual[i])+"\n")
-        if foreign_id == i:
-            correct += 1
+            if i == j:
+                actual[i] = (i,score)
+            output[i].put( (score, score, j))
+        total+=1
+        score_percent=0
+        for c in range(0,k):
+            (priority, val, foreign_id) = output[i].get()
+            output_file.write(str(i)+"\t"+str(foreign_id)+","+str(val)+"\t"+str(actual[i])+"\n")
+            if foreign_id == i:
+                correct += 1
 
-output_file.close()
-print ("Completed Testing!")
+    output_file.close()
+    print ("Completed Testing!")
+    return custom_file_name
+
+if __name__=='__main__':
+    sys.exit(main(sys.argv[1], sys.argv[2]))
